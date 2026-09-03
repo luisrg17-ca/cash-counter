@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canadian Cash Counter</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .header h1 {
+      font-size: 30px;
+      margin-bottom: 7px;
+    }
+
+    .header p {
+      color: #6b7280;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+
+    .date-area {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .date-area label {
+      font-weight: bold;
+    }
+
+    input[type="date"] {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 16px;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+    }
+
+    .money-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 15px;
+    }
+
+    .money-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 15px;
+      background: #fafafa;
+    }
+
+    .money-value {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .money-name {
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .money-item input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .subtotal {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .totals {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .total-box {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      border: 1px solid #e5e7eb;
+    }
+
+    .total-box p {
+      color: #6b7280;
+      margin-bottom: 5px;
+    }
+
+    .total-box strong {
+      font-size: 25px;
+    }
+
+    .grand-total {
+      background: #111827;
+      color: white;
+    }
+
+    .grand-total p {
+      color: #d1d5db;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 9px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save-button {
+      background: #2563eb;
+      color: white;
+    }
+
+    .clear-button {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .delete-button {
+      background: #dc2626;
+      color: white;
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+    }
+
+    .general-total {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .summary-item {
+      padding: 15px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+
+    .summary-item strong {
+      display: block;
+      font-size: 20px;
+      margin-top: 5px;
+    }
+
+    .message {
+      margin-top: 15px;
+      color: #2563eb;
+      font-weight: bold;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 10px;
+      }
+
+      .totals {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        padding: 8px 5px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>🇨🇦 Canadian Cash Counter</h1>
+    <p>Daily Cash Counting System</p>
+  </div>
+
+  <div class="card">
+    <div class="date-area">
+      <label for="date">Count Date:</label>
+      <input type="date" id="date" />
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💵 Bills</h2>
+    <div class="money-grid" id="bills"></div>
+  </div>
+
+  <div class="card">
+    <h2>🪙 Coins</h2>
+    <div class="money-grid" id="coins"></div>
+  </div>
+
+  <div class="card">
+    <div class="totals">
+
+      <div class="total-box">
+        <p>Total Bills</p>
+        <strong id="billTotal">$0.00</strong>
+      </div>
+
+      <div class="total-box">
+        <p>Total Coins</p>
+        <strong id="coinTotal">$0.00</strong>
+      </div>
+
+      <div class="total-box grand-total">
+        <p>TOTAL CASH</p>
+        <strong id="cashTotal">$0.00</strong>
+      </div>
+
+    </div>
+
+    <div class="buttons">
+      <button class="save-button" onclick="saveCount()">
+        Save Daily Count
+      </button>
+
+      <button class="clear-button" onclick="clearInputs()">
+        Clear
+      </button>
+    </div>
+
+    <div class="message" id="message"></div>
+  </div>
+
+  <div class="card">
+    <h2>📅 Daily History</h2>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Bills</th>
+            <th>Coins</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody id="history"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📊 General Cash Count</h2>
+
+    <p>Total cash from all saved days:</p>
+
+    <div class="general-total" id="generalTotal">
+      $0.00
+    </div>
+
+    <div class="summary-grid" id="generalSummary"></div>
+  </div>
+
+</div>
+
+
+<script>
+
+const denominations = [
+  { id: "bill100", label: "$100", value: 100, type: "bill" },
+  { id: "bill50", label: "$50", value: 50, type: "bill" },
+  { id: "bill20", label: "$20", value: 20, type: "bill" },
+  { id: "bill10", label: "$10", value: 10, type: "bill" },
+  { id: "bill5", label: "$5", value: 5, type: "bill" },
+
+  { id: "coin2", label: "$2", name: "Toonie", value: 2, type: "coin" },
+  { id: "coin1", label: "$1", name: "Loonie", value: 1, type: "coin" },
+  { id: "coin25", label: "25¢", name: "Quarter", value: 0.25, type: "coin" },
+  { id: "coin10", label: "10¢", name: "Dime", value: 0.10, type: "coin" },
+  { id: "coin5", label: "5¢", name: "Nickel", value: 0.05, type: "coin" }
+];
+
+let savedCounts =
+  JSON.parse(localStorage.getItem("canadianCashCounts")) || [];
+
+
+function formatMoney(amount) {
+
+  return new Intl.NumberFormat(
+    "en-CA",
+    {
+      style: "currency",
+      currency: "CAD"
+    }
+  ).format(amount);
+
+}
+
+
+function createInputs() {
+
+  const billsContainer =
+    document.getElementById("bills");
+
+  const coinsContainer =
+    document.getElementById("coins");
+
+
+  denominations.forEach(item => {
+
+    const card =
+      document.createElement("div");
+
+    card.className = "money-item";
+
+
+    card.innerHTML = `
+
+      <div class="money-value">
+        ${item.label}
+      </div>
+
+      <div class="money-name">
+        ${item.name || "Canadian Bill"}
+      </div>
+
+      <input
+        type="number"
+        id="${item.id}"
+        min="0"
+        step="1"
+        value="0"
+        oninput="calculateTotals()"
+      >
+
+      <div
+        class="subtotal"
+        id="${item.id}Subtotal"
+      >
+        $0.00
+      </div>
+
+    `;
+
+
+    if(item.type === "bill") {
+
+      billsContainer.appendChild(card);
+
+    } else {
+
+      coinsContainer.appendChild(card);
+
+    }
+
+  });
+
+}
+
+
+function getQuantity(id) {
+
+  const input =
+    document.getElementById(id);
+
+  let quantity =
+    parseInt(input.value);
+
+  if(
+    isNaN(quantity) ||
+    quantity < 0
+  ) {
+
+    quantity = 0;
+    input.value = 0;
+
+  }
+
+  return quantity;
+
+}
+
+
+function calculateTotals() {
+
+  let bills = 0;
+  let coins = 0;
+
+
+  denominations.forEach(item => {
+
+    const quantity =
+      getQuantity(item.id);
+
+    const subtotal =
+      quantity * item.value;
+
+
+    document.getElementById(
+      item.id + "Subtotal"
+    ).textContent =
+      formatMoney(subtotal);
+
+
+    if(item.type === "bill") {
+
+      bills += subtotal;
+
+    } else {
+
+      coins += subtotal;
+
+    }
+
+  });
+
+
+  document.getElementById(
+    "billTotal"
+  ).textContent =
+    formatMoney(bills);
+
+
+  document.getElementById(
+    "coinTotal"
+  ).textContent =
+    formatMoney(coins);
+
+
+  document.getElementById(
+    "cashTotal"
+  ).textContent =
+    formatMoney(bills + coins);
+
+}
+
+
+function clearInputs() {
+
+  denominations.forEach(item => {
+
+    document.getElementById(
+      item.id
+    ).value = 0;
+
+  });
+
+
+  document.getElementById(
+    "message"
+  ).textContent = "";
+
+
+  calculateTotals();
+
+}
+
+
+function saveCount() {
+
+  const date =
+    document.getElementById(
+      "date"
+    ).value;
+
+
+  if(!date) {
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      "Please select a date.";
+
+    return;
+
+  }
+
+
+  let counts = {};
+
+  let billTotal = 0;
+  let coinTotal = 0;
+
+
+  denominations.forEach(item => {
+
+    const quantity =
+      getQuantity(item.id);
+
+    counts[item.id] =
+      quantity;
+
+
+    if(item.type === "bill") {
+
+      billTotal +=
+        quantity * item.value;
+
+    } else {
+
+      coinTotal +=
+        quantity * item.value;
+
+    }
+
+  });
+
+
+  const total =
+    billTotal + coinTotal;
+
+
+  if(total === 0) {
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      "Enter a cash amount before saving.";
+
+    return;
+
+  }
+
+
+  const existingIndex =
+    savedCounts.findIndex(
+      item => item.date === date
+    );
+
+
+  const record = {
+
+    date,
+    counts,
+    billTotal,
+    coinTotal,
+    total
+
+  };
+
+
+  if(existingIndex >= 0) {
+
+    savedCounts[
+      existingIndex
+    ] = record;
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      "Daily count updated.";
+
+  } else {
+
+    savedCounts.push(record);
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      "Daily count saved.";
+
+  }
+
+
+  localStorage.setItem(
+    "canadianCashCounts",
+    JSON.stringify(savedCounts)
+  );
+
+
+  renderHistory();
+  renderGeneralSummary();
+
+}
+
+
+function deleteCount(date) {
+
+  const confirmation =
+    confirm(
+      "Delete this daily count?"
+    );
+
+
+  if(!confirmation) {
+
+    return;
+
+  }
+
+
+  savedCounts =
+    savedCounts.filter(
+      item =>
+        item.date !== date
+    );
+
+
+  localStorage.setItem(
+    "canadianCashCounts",
+    JSON.stringify(savedCounts)
+  );
+
+
+  renderHistory();
+  renderGeneralSummary();
+
+}
+
+
+function renderHistory() {
+
+  const history =
+    document.getElementById(
+      "history"
+    );
+
+
+  history.innerHTML = "";
+
+
+  const sorted =
+    [...savedCounts].sort(
+      (a,b) =>
+        b.date.localeCompare(a.date)
+    );
+
+
+  sorted.forEach(item => {
+
+    const row =
+      document.createElement("tr");
+
+
+    row.innerHTML = `
+
+      <td>${item.date}</td>
+
+      <td>
+        ${formatMoney(item.billTotal)}
+      </td>
+
+      <td>
+        ${formatMoney(item.coinTotal)}
+      </td>
+
+      <td>
+        <strong>
+          ${formatMoney(item.total)}
+        </strong>
+      </td>
+
+      <td>
+
+        <button
+          class="delete-button"
+          onclick="deleteCount('${item.date}')"
+        >
+          Delete
+        </button>
+
+      </td>
+
+    `;
+
+
+    history.appendChild(row);
+
+  });
+
+}
+
+
+function renderGeneralSummary() {
+
+  const aggregate = {};
+
+  denominations.forEach(item => {
+
+    aggregate[item.id] = 0;
+
+  });
+
+
+  savedCounts.forEach(record => {
+
+    denominations.forEach(item => {
+
+      aggregate[item.id] +=
+        record.counts[item.id] || 0;
+
+    });
+
+  });
+
+
+  let generalTotal = 0;
+
+
+  const summaryContainer =
+    document.getElementById(
+      "generalSummary"
+    );
+
+
+  summaryContainer.innerHTML = "";
+
+
+  denominations.forEach(item => {
+
+    const quantity =
+      aggregate[item.id];
+
+
+    const value =
+      quantity * item.value;
+
+
+    generalTotal += value;
+
+
+    const box =
+      document.createElement("div");
+
+
+    box.className =
+      "summary-item";
+
+
+    box.innerHTML = `
+
+      <span>
+        ${item.label}
+      </span>
+
+      <strong>
+        ${quantity}
+      </strong>
+
+      <small>
+        ${formatMoney(value)}
+      </small>
+
+    `;
+
+
+    summaryContainer.appendChild(box);
+
+  });
+
+
+  document.getElementById(
+    "generalTotal"
+  ).textContent =
+    formatMoney(generalTotal);
+
+}
+
+
+function setToday() {
+
+  const today =
+    new Date();
+
+
+  const year =
+    today.getFullYear();
+
+
+  const month =
+    String(
+      today.getMonth() + 1
+    ).padStart(2,"0");
+
+
+  const day =
+    String(
+      today.getDate()
+    ).padStart(2,"0");
+
+
+  document.getElementById(
+    "date"
+  ).value =
+    `${year}-${month}-${day}`;
+
+}
+
+
+createInputs();
+setToday();
+calculateTotals();
+renderHistory();
+renderGeneralSummary();
+
+</script>
+
+</body>
+</html>
