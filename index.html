@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Canadian Cash Counter</title>
+  <title>Showcase Cash Counter</title>
 
   <style>
     * {
@@ -108,9 +108,15 @@
       text-align: right;
     }
 
+    .roll-info {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
     .totals {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 15px;
     }
 
@@ -222,7 +228,13 @@
       font-weight: bold;
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 800px) {
+      .totals {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 500px) {
       body {
         padding: 10px;
       }
@@ -269,8 +281,13 @@
   </div>
 
   <div class="card">
-    <h2>🪙 Coins</h2>
+    <h2>🪙 Loose Coins</h2>
     <div class="money-grid" id="coins"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧻 Full Coin Rolls</h2>
+    <div class="money-grid" id="rolls"></div>
   </div>
 
   <div class="card">
@@ -282,8 +299,13 @@
       </div>
 
       <div class="total-box">
-        <p>Total Coins</p>
+        <p>Loose Coins</p>
         <strong id="coinTotal">$0.00</strong>
+      </div>
+
+      <div class="total-box">
+        <p>Coin Rolls</p>
+        <strong id="rollTotal">$0.00</strong>
       </div>
 
       <div class="total-box grand-total">
@@ -315,7 +337,8 @@
           <tr>
             <th>Date</th>
             <th>Bills</th>
-            <th>Coins</th>
+            <th>Loose Coins</th>
+            <th>Rolls</th>
             <th>Total</th>
             <th></th>
           </tr>
@@ -340,7 +363,6 @@
 
 </div>
 
-
 <script>
 
 const denominations = [
@@ -357,12 +379,18 @@ const denominations = [
   { id: "coin5", label: "5¢", name: "Nickel", value: 0.05, type: "coin" }
 ];
 
+const rolls = [
+  { id: "roll2", label: "$2 Roll", name: "Toonie", coins: 25, value: 50 },
+  { id: "roll1", label: "$1 Roll", name: "Loonie", coins: 25, value: 25 },
+  { id: "roll25", label: "25¢ Roll", name: "Quarter", coins: 40, value: 10 },
+  { id: "roll10", label: "10¢ Roll", name: "Dime", coins: 50, value: 5 },
+  { id: "roll5", label: "5¢ Roll", name: "Nickel", coins: 40, value: 2 }
+];
+
 let savedCounts =
   JSON.parse(localStorage.getItem("canadianCashCounts")) || [];
 
-
 function formatMoney(amount) {
-
   return new Intl.NumberFormat(
     "en-CA",
     {
@@ -370,29 +398,20 @@ function formatMoney(amount) {
       currency: "CAD"
     }
   ).format(amount);
-
 }
-
 
 function createInputs() {
 
-  const billsContainer =
-    document.getElementById("bills");
-
-  const coinsContainer =
-    document.getElementById("coins");
-
+  const billsContainer = document.getElementById("bills");
+  const coinsContainer = document.getElementById("coins");
+  const rollsContainer = document.getElementById("rolls");
 
   denominations.forEach(item => {
 
-    const card =
-      document.createElement("div");
-
+    const card = document.createElement("div");
     card.className = "money-item";
 
-
     card.innerHTML = `
-
       <div class="money-value">
         ${item.label}
       </div>
@@ -416,285 +435,258 @@ function createInputs() {
       >
         $0.00
       </div>
-
     `;
 
-
     if(item.type === "bill") {
-
       billsContainer.appendChild(card);
-
     } else {
-
       coinsContainer.appendChild(card);
-
     }
+
+  });
+
+  rolls.forEach(item => {
+
+    const card = document.createElement("div");
+    card.className = "money-item";
+
+    card.innerHTML = `
+      <div class="money-value">
+        ${item.label}
+      </div>
+
+      <div class="money-name">
+        ${item.name}
+      </div>
+
+      <div class="roll-info">
+        ${item.coins} coins per roll · ${formatMoney(item.value)} per full roll
+      </div>
+
+      <input
+        type="number"
+        id="${item.id}"
+        min="0"
+        step="1"
+        value="0"
+        oninput="calculateTotals()"
+      >
+
+      <div
+        class="subtotal"
+        id="${item.id}Subtotal"
+      >
+        $0.00
+      </div>
+    `;
+
+    rollsContainer.appendChild(card);
 
   });
 
 }
 
-
 function getQuantity(id) {
 
-  const input =
-    document.getElementById(id);
+  const input = document.getElementById(id);
 
-  let quantity =
-    parseInt(input.value);
+  let quantity = parseInt(input.value);
 
   if(
     isNaN(quantity) ||
     quantity < 0
   ) {
-
     quantity = 0;
     input.value = 0;
-
   }
 
   return quantity;
-
 }
-
 
 function calculateTotals() {
 
   let bills = 0;
   let coins = 0;
-
+  let rollTotal = 0;
 
   denominations.forEach(item => {
 
-    const quantity =
-      getQuantity(item.id);
-
-    const subtotal =
-      quantity * item.value;
-
+    const quantity = getQuantity(item.id);
+    const subtotal = quantity * item.value;
 
     document.getElementById(
       item.id + "Subtotal"
-    ).textContent =
-      formatMoney(subtotal);
-
+    ).textContent = formatMoney(subtotal);
 
     if(item.type === "bill") {
-
       bills += subtotal;
-
     } else {
-
       coins += subtotal;
-
     }
 
   });
 
+  rolls.forEach(item => {
 
-  document.getElementById(
-    "billTotal"
-  ).textContent =
+    const quantity = getQuantity(item.id);
+    const subtotal = quantity * item.value;
+
+    document.getElementById(
+      item.id + "Subtotal"
+    ).textContent = formatMoney(subtotal);
+
+    rollTotal += subtotal;
+
+  });
+
+  document.getElementById("billTotal").textContent =
     formatMoney(bills);
 
-
-  document.getElementById(
-    "coinTotal"
-  ).textContent =
+  document.getElementById("coinTotal").textContent =
     formatMoney(coins);
 
+  document.getElementById("rollTotal").textContent =
+    formatMoney(rollTotal);
 
-  document.getElementById(
-    "cashTotal"
-  ).textContent =
-    formatMoney(bills + coins);
+  document.getElementById("cashTotal").textContent =
+    formatMoney(bills + coins + rollTotal);
 
 }
-
 
 function clearInputs() {
 
   denominations.forEach(item => {
-
-    document.getElementById(
-      item.id
-    ).value = 0;
-
+    document.getElementById(item.id).value = 0;
   });
 
+  rolls.forEach(item => {
+    document.getElementById(item.id).value = 0;
+  });
 
-  document.getElementById(
-    "message"
-  ).textContent = "";
-
+  document.getElementById("message").textContent = "";
 
   calculateTotals();
-
 }
-
 
 function saveCount() {
 
-  const date =
-    document.getElementById(
-      "date"
-    ).value;
-
+  const date = document.getElementById("date").value;
 
   if(!date) {
-
-    document.getElementById(
-      "message"
-    ).textContent =
+    document.getElementById("message").textContent =
       "Please select a date.";
-
     return;
-
   }
 
-
   let counts = {};
+  let rollCounts = {};
 
   let billTotal = 0;
   let coinTotal = 0;
-
+  let rollTotal = 0;
 
   denominations.forEach(item => {
 
-    const quantity =
-      getQuantity(item.id);
+    const quantity = getQuantity(item.id);
 
-    counts[item.id] =
-      quantity;
-
+    counts[item.id] = quantity;
 
     if(item.type === "bill") {
-
-      billTotal +=
-        quantity * item.value;
-
+      billTotal += quantity * item.value;
     } else {
-
-      coinTotal +=
-        quantity * item.value;
-
+      coinTotal += quantity * item.value;
     }
 
   });
 
+  rolls.forEach(item => {
+
+    const quantity = getQuantity(item.id);
+
+    rollCounts[item.id] = quantity;
+
+    rollTotal += quantity * item.value;
+
+  });
 
   const total =
-    billTotal + coinTotal;
-
+    billTotal + coinTotal + rollTotal;
 
   if(total === 0) {
-
-    document.getElementById(
-      "message"
-    ).textContent =
+    document.getElementById("message").textContent =
       "Enter a cash amount before saving.";
-
     return;
-
   }
-
 
   const existingIndex =
     savedCounts.findIndex(
       item => item.date === date
     );
 
-
   const record = {
-
     date,
     counts,
+    rollCounts,
     billTotal,
     coinTotal,
+    rollTotal,
     total
-
   };
-
 
   if(existingIndex >= 0) {
 
-    savedCounts[
-      existingIndex
-    ] = record;
+    savedCounts[existingIndex] = record;
 
-    document.getElementById(
-      "message"
-    ).textContent =
+    document.getElementById("message").textContent =
       "Daily count updated.";
 
   } else {
 
     savedCounts.push(record);
 
-    document.getElementById(
-      "message"
-    ).textContent =
+    document.getElementById("message").textContent =
       "Daily count saved.";
 
   }
 
-
   localStorage.setItem(
     "canadianCashCounts",
     JSON.stringify(savedCounts)
   );
 
-
   renderHistory();
   renderGeneralSummary();
-
 }
-
 
 function deleteCount(date) {
 
   const confirmation =
-    confirm(
-      "Delete this daily count?"
-    );
-
+    confirm("Delete this daily count?");
 
   if(!confirmation) {
-
     return;
-
   }
-
 
   savedCounts =
     savedCounts.filter(
-      item =>
-        item.date !== date
+      item => item.date !== date
     );
-
 
   localStorage.setItem(
     "canadianCashCounts",
     JSON.stringify(savedCounts)
   );
 
-
   renderHistory();
   renderGeneralSummary();
-
 }
-
 
 function renderHistory() {
 
   const history =
-    document.getElementById(
-      "history"
-    );
-
+    document.getElementById("history");
 
   history.innerHTML = "";
-
 
   const sorted =
     [...savedCounts].sort(
@@ -702,44 +694,47 @@ function renderHistory() {
         b.date.localeCompare(a.date)
     );
 
-
   sorted.forEach(item => {
 
     const row =
       document.createElement("tr");
 
+    const safeRollTotal = item.rollTotal || 0;
 
     row.innerHTML = `
-
       <td>${item.date}</td>
 
       <td>
-        ${formatMoney(item.billTotal)}
+        ${formatMoney(item.billTotal || 0)}
       </td>
 
       <td>
-        ${formatMoney(item.coinTotal)}
+        ${formatMoney(item.coinTotal || 0)}
+      </td>
+
+      <td>
+        ${formatMoney(safeRollTotal)}
       </td>
 
       <td>
         <strong>
-          ${formatMoney(item.total)}
+          ${formatMoney(
+            (item.billTotal || 0) +
+            (item.coinTotal || 0) +
+            safeRollTotal
+          )}
         </strong>
       </td>
 
       <td>
-
         <button
           class="delete-button"
           onclick="deleteCount('${item.date}')"
         >
           Delete
         </button>
-
       </td>
-
     `;
-
 
     history.appendChild(row);
 
@@ -747,65 +742,54 @@ function renderHistory() {
 
 }
 
-
 function renderGeneralSummary() {
 
   const aggregate = {};
+  const rollAggregate = {};
 
   denominations.forEach(item => {
-
     aggregate[item.id] = 0;
-
   });
 
+  rolls.forEach(item => {
+    rollAggregate[item.id] = 0;
+  });
 
   savedCounts.forEach(record => {
 
     denominations.forEach(item => {
-
       aggregate[item.id] +=
-        record.counts[item.id] || 0;
+        record.counts?.[item.id] || 0;
+    });
 
+    rolls.forEach(item => {
+      rollAggregate[item.id] +=
+        record.rollCounts?.[item.id] || 0;
     });
 
   });
 
-
   let generalTotal = 0;
 
-
   const summaryContainer =
-    document.getElementById(
-      "generalSummary"
-    );
-
+    document.getElementById("generalSummary");
 
   summaryContainer.innerHTML = "";
 
-
   denominations.forEach(item => {
 
-    const quantity =
-      aggregate[item.id];
-
-
-    const value =
-      quantity * item.value;
-
+    const quantity = aggregate[item.id];
+    const value = quantity * item.value;
 
     generalTotal += value;
-
 
     const box =
       document.createElement("div");
 
-
     box.className =
       "summary-item";
 
-
     box.innerHTML = `
-
       <span>
         ${item.label}
       </span>
@@ -817,14 +801,42 @@ function renderGeneralSummary() {
       <small>
         ${formatMoney(value)}
       </small>
-
     `;
-
 
     summaryContainer.appendChild(box);
 
   });
 
+  rolls.forEach(item => {
+
+    const quantity = rollAggregate[item.id];
+    const value = quantity * item.value;
+
+    generalTotal += value;
+
+    const box =
+      document.createElement("div");
+
+    box.className =
+      "summary-item";
+
+    box.innerHTML = `
+      <span>
+        ${item.label}
+      </span>
+
+      <strong>
+        ${quantity} rolls
+      </strong>
+
+      <small>
+        ${formatMoney(value)}
+      </small>
+    `;
+
+    summaryContainer.appendChild(box);
+
+  });
 
   document.getElementById(
     "generalTotal"
@@ -833,28 +845,23 @@ function renderGeneralSummary() {
 
 }
 
-
 function setToday() {
 
   const today =
     new Date();
 
-
   const year =
     today.getFullYear();
-
 
   const month =
     String(
       today.getMonth() + 1
     ).padStart(2,"0");
 
-
   const day =
     String(
       today.getDate()
     ).padStart(2,"0");
-
 
   document.getElementById(
     "date"
@@ -862,7 +869,6 @@ function setToday() {
     `${year}-${month}-${day}`;
 
 }
-
 
 createInputs();
 setToday();
